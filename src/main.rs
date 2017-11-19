@@ -1,10 +1,13 @@
 extern crate pnet_datalink;
 extern crate ipnetwork;
+extern crate pnet;
 
 use std::env;
 use std::io::{self, Write};
 use std::process;
 use ipnetwork::IpNetwork;
+use pnet::packet::ethernet::{EthernetPacket};
+use pnet::datalink::Channel::Ethernet;
 
 fn main() {
     let interfaces = pnet_datalink::interfaces();
@@ -21,10 +24,10 @@ fn main() {
 
     println!("===================");
     println!("IP:");
-    for ip in interface.ips {
+    for ip in &interface.ips {
         match ip {
-            IpNetwork::V4(a) => println!("   IPv4: {}", a.to_string()),
-            IpNetwork::V6(a) => println!("   IPv6: {}", a.to_string()),
+            &IpNetwork::V4(a) => println!("   IPv4: {}", a.to_string()),
+            &IpNetwork::V6(a) => println!("   IPv6: {}", a.to_string()),
         }
     }
     println!("-------------------");
@@ -32,4 +35,24 @@ fn main() {
     println!("Mac Addr:");
     println!("   {}", mac_addr);
     println!("===================");
+
+    let (mut tx, mut rx) = match pnet_datalink::channel(&interface, Default::default()) {
+        Ok(Ethernet(tx, rx)) => (tx, rx),
+        Ok(_) => panic!("Unhandled channel type!"),
+        Err(e) => panic!("An error occurred when creating the datalink: {}", e)
+    };
+
+    loop {
+        match rx.next() {
+            Ok(packet) => {
+                let packet = EthernetPacket::new(packet).unwrap();
+                println!("Packet info:");
+                println!("   From: {:?}", packet.get_source());
+                println!("   To: {:?}", packet.get_destination());
+            },
+            Err(e) => {
+                panic!("ERROR WITH PACKET!!!");
+            }
+        }
+    }
 }

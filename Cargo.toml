@@ -4,5 +4,6 @@ version = "0.1.0"
 authors = ["Matt <young.qubit@gmail.com>"]
 
 [dependencies]
+pnet = "*"
 pnet_datalink = "0.20.0"
 ipnetwork = "*"
