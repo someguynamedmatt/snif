@@ -1,12 +1,3 @@
-[root]
-name = "sniff"
-version = "0.1.0"
-dependencies = [
- "ipnetwork 0.12.7 (registry+https://github.com/rust-lang/crates.io-index)",
- "pnet 0.20.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "pnet_datalink 0.20.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
 [[package]]
 name = "aho-corasick"
 version = "0.6.3"
@@ -165,6 +156,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "rustc-serialize"
 version = "0.3.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "sniff"
+version = "0.1.0"
+dependencies = [
+ "ipnetwork 0.12.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pnet 0.20.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pnet_datalink 0.20.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "syntex"

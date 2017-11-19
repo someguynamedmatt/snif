@@ -1,12 +1,46 @@
+//! SNIF: Simple Network InterFace
+//!
+//! Quickly (and cleanly) check the configurations of your network devices
+
+// Enable clippy if our Cargo.toml file asked us to do so.
+#![cfg_attr(feature="clippy", feature(plugin))]
+#![cfg_attr(feature="clippy", plugin(clippy))]
+
+// Enable as many useful Rust and Clippy warnings as we can stand.  We'd
+// also enable `trivial_casts`, but we're waiting for
+// https://github.com/rust-lang/rust/issues/23416.
+#![warn(missing_copy_implementations,
+        missing_debug_implementations,
+        missing_docs,
+        trivial_numeric_casts,
+        unsafe_code,
+        unused_extern_crates,
+        unused_import_braces,
+        unused_qualifications)]
+#![cfg_attr(feature="clippy", warn(cast_possible_truncation))]
+#![cfg_attr(feature="clippy", warn(cast_possible_wrap))]
+#![cfg_attr(feature="clippy", warn(cast_precision_loss))]
+#![cfg_attr(feature="clippy", warn(cast_sign_loss))]
+#![cfg_attr(feature="clippy", warn(missing_docs_in_private_items))]
+#![cfg_attr(feature="clippy", warn(mut_mut))]
+// Disallow `println!`. Use `debug!` for debug output
+// (which is provided by the `log` crate).
+#![cfg_attr(feature="clippy", warn(print_stdout))]
+// This allows us to use `unwrap` on `Option` values (because doing makes
+// working with Regex matches much nicer) and when compiling in test mode
+// (because using it in tests is idiomatic).
+#![cfg_attr(all(not(test), feature="clippy"), warn(result_unwrap_used))]
+#![cfg_attr(feature="clippy", warn(unseparated_literal_suffix))]
+#![cfg_attr(feature="clippy", warn(wrong_pub_self_convention))]
+
 extern crate pnet_datalink;
 extern crate ipnetwork;
 extern crate pnet;
 
 use std::env;
-use std::io::{self, Write};
-use std::process;
 use ipnetwork::IpNetwork;
 use std::net::IpAddr;
+
 use pnet::packet::Packet;
 use pnet::packet::arp::ArpPacket;
 use pnet::packet::ip::{IpNextHeaderProtocol, IpNextHeaderProtocols};
@@ -17,109 +51,86 @@ use pnet::datalink::Channel::Ethernet;
 
 fn main() {
     let interfaces = pnet_datalink::interfaces();
-    let iface_arg = match env::args().nth(1) {
-        Some(i) => i,
-        None => {
-            writeln!(io::stderr(), "Network interface name not supplied!").unwrap();
-            process::exit(1);
-        },
-    };
+    let iface_arg = env::args().nth(1).expect("Network interface name not supplied!");
 
     let interface_match = |iface: &pnet_datalink::NetworkInterface| iface.name == iface_arg;
-    let interface = interfaces.into_iter().filter(interface_match).next().unwrap();
+    let interface = interfaces.into_iter().find(interface_match).unwrap();
 
     println!("===================");
     println!("IP:");
     for ip in &interface.ips {
-        match ip {
-            &IpNetwork::V4(a) => println!("   IPv4: {}", a.to_string()),
-            &IpNetwork::V6(a) => println!("   IPv6: {}", a.to_string()),
+        match *ip {
+            IpNetwork::V4(a) => println!("   IPv4: {}", a),
+            IpNetwork::V6(a) => println!("   IPv6: {}", a),
         }
     }
+
     println!("-------------------");
-    let mac_addr = interface.mac.map(|mac| mac.to_string()).expect("???");
     println!("Mac Addr:");
-    println!("   {}", mac_addr);
+    println!("   {}", interface.mac.expect("???"));
     println!("===================");
 
-    let (mut tx, mut rx) = match pnet_datalink::channel(&interface, Default::default()) {
+    let (_, mut rx) = match pnet_datalink::channel(&interface, Default::default()) {
         Ok(Ethernet(tx, rx)) => (tx, rx),
         Ok(_) => panic!("Unhandled channel type!"),
         Err(e) => panic!("An error occurred when creating the datalink: {}", e)
     };
 
-
-
     loop {
-        match rx.next() {
-            Ok(packet) => {
-                let packet = EthernetPacket::new(packet).unwrap();
-                //println!("Packet info:");
-                //println!("{:?}", packet);
-                //println!("   From: {:?}", packet.get_source());
-                //println!("   To: {:?}", packet.get_destination());
-                handle_packet("wlp4s0", &packet);
-            },
-            Err(e) => {
-                panic!("ERROR WITH PACKET!!!");
-            }
-        }
+        let packet = EthernetPacket::new(rx.next().expect("ERROR WITH PACKET!!!"));
+        handle_packet("wlp4s0", &packet.unwrap());
     }
 }
 
+/// Wrapper function to handle arbitrary data packets
 fn handle_packet(interface_name: &str, ethernet: &EthernetPacket) {
     match ethernet.get_ethertype() {
         EtherTypes::Ipv4 => handle_ipv4_packet(interface_name, ethernet),
-        //EtherTypes::Ipv6 => handle_ipv6_packet(interface_name, ethernet),
         EtherTypes::Arp => handle_arp_packet(interface_name, ethernet),
-        _ => {
-            println!("Other ethertype")
-        }
+        _ => println!("Other ethertype"),
     }
 }
 
 fn handle_arp_packet(interface_name: &str, ethernet: &EthernetPacket) {
     println!("Handle ARP packet!");
     let header = ArpPacket::new(ethernet.payload());
-    if let Some(header) = header {
-        println!("[{}]: ARP packet: {}({}) > {}({}); operation: {:?}",
+    if header.is_none() { println!("[{}]: Malformed ARP Packet", interface_name); return; }
+    let header = header.unwrap();
+
+    println!("[{}]: ARP packet: {}({}) > {}({}); operation: {:?}",
         interface_name,
         ethernet.get_source(),
         header.get_sender_proto_addr(),
         ethernet.get_destination(),
         header.get_target_proto_addr(),
         header.get_operation());
-    } else {
-        println!("[{}]: Malformed ARP Packet", interface_name);
-    }
 }
 
 fn handle_ipv4_packet(interface_name: &str, ethernet: &EthernetPacket) {
     println!("Handle IPv4 Packet");
     let header = Ipv4Packet::new(ethernet.payload());
-    if let Some(header) = header {
-        handle_transport_protocol(interface_name,
-                                  IpAddr::V4(header.get_source()),
-                                  IpAddr::V4(header.get_destination()),
-                                  header.get_next_level_protocol(),
-                                  header.payload());
-    } else {
-        println!("Malformed IPv4 Packet!!!")
-    }
+    if header.is_none() { println!("Malformed IPv4 Packet!!!"); return; }
+    let header = header.unwrap();
+
+    handle_transport_protocol(interface_name,
+                              IpAddr::V4(header.get_source()),
+                              IpAddr::V4(header.get_destination()),
+                              header.get_next_level_protocol(),
+                              header.payload());
 }
 
 fn handle_tcp_packet(interface_name: &str, source: IpAddr, destination: IpAddr, packet: &[u8]) {
-    let tcp = TcpPacket::new(packet);
-    if let Some(tcp) = tcp {
-        println!("[{}]: TCP Packet: {}:{} > {}:{}; length: {}", interface_name,
-                 source,
-                 tcp.get_source(),
-                 destination,
-                 tcp.get_destination(),
-                 packet.len());
-    } else {
-        println!("Malformed TCP packet");
-    }
+    let tcp_packet = TcpPacket::new(packet);
+    if tcp_packet.is_none() { println!("Malformed TCP packet"); return; }
+    let tcp_packet = tcp_packet.unwrap();
+
+    println!("[{}]: TCP Packet: {}:{} > {}:{}; length: {}",
+             interface_name,
+             source,
+             tcp_packet.get_source(),
+             destination,
+             tcp_packet.get_destination(),
+             packet.len());
 }
 
 fn handle_transport_protocol(interface_name: &str, source: IpAddr, destination: IpAddr,
