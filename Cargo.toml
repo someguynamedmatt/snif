@@ -1,0 +1,8 @@
+[package]
+name = "sniff"
+version = "0.1.0"
+authors = ["Matt <young.qubit@gmail.com>"]
+
+[dependencies]
+pnet_datalink = "0.20.0"
+ipnetwork = "*"
