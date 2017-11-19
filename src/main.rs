@@ -19,8 +19,17 @@ fn main() {
     let interface_match = |iface: &pnet_datalink::NetworkInterface| iface.name == iface_arg;
     let interface = interfaces.into_iter().filter(interface_match).next().unwrap();
 
-    println!("IPs:");
+    println!("===================");
+    println!("IP:");
     for ip in interface.ips {
-        println!("    {}", IpNetwork::ip(&ip).to_string());
+        match ip {
+            IpNetwork::V4(a) => println!("   IPv4: {}", a.to_string()),
+            IpNetwork::V6(a) => println!("   IPv6: {}", a.to_string()),
+        }
     }
+    println!("-------------------");
+    let mac_addr = interface.mac.map(|mac| mac.to_string()).expect("???");
+    println!("Mac Addr:");
+    println!("   {}", mac_addr);
+    println!("===================");
 }
