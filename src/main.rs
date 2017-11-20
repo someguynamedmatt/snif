@@ -35,9 +35,21 @@
 
 extern crate pnet_datalink;
 extern crate ipnetwork;
+extern crate pnet;
 
 use std::env;
+use std::io;
+use std::io::prelude::*;
 use ipnetwork::IpNetwork;
+use std::net::IpAddr;
+
+use pnet::packet::Packet;
+use pnet::packet::arp::ArpPacket;
+use pnet::packet::ip::{IpNextHeaderProtocol, IpNextHeaderProtocols};
+use pnet::packet::ipv4::Ipv4Packet;
+use pnet::packet::tcp::TcpPacket;
+use pnet::packet::ethernet::{EtherTypes, EthernetPacket};
+use pnet::datalink::Channel::Ethernet;
 
 #[cfg(not(test))]
 fn main() {
@@ -60,6 +72,81 @@ fn main() {
     println!("Mac Addr:");
     println!("   {}", interface.mac.expect("???"));
     println!("===================");
+
+    let (_, mut rx) = match pnet_datalink::channel(&interface, Default::default()) {
+        Ok(Ethernet(tx, rx)) => (tx, rx),
+        Ok(_) => panic!("Unhandled channel type!"),
+        Err(e) => panic!("An error occurred when creating the datalink: {}", e)
+    };
+
+    loop {
+        let packet = EthernetPacket::new(rx.next().expect("ERROR WITH PACKET!!!"));
+        handle_packet("wlp4s0", &packet.unwrap());
+    }
+}
+
+/// Wrapper function to handle arbitrary data packets
+fn handle_packet(interface_name: &str, ethernet: &EthernetPacket) {
+    match ethernet.get_ethertype() {
+        EtherTypes::Ipv4 => handle_ipv4_packet(interface_name, ethernet),
+        EtherTypes::Arp => handle_arp_packet(interface_name, ethernet),
+        _ => println!("Other ethertype"),
+    }
+}
+
+fn handle_arp_packet(interface_name: &str, ethernet: &EthernetPacket) {
+    println!("Handle ARP packet!");
+    let header = ArpPacket::new(ethernet.payload());
+    if header.is_none() { println!("[{}]: Malformed ARP Packet", interface_name); return; }
+    let header = header.unwrap();
+
+    println!("[{}]: ARP packet: {}({}) > {}({}); operation: {:?}",
+        interface_name,
+        ethernet.get_source(),
+        header.get_sender_proto_addr(),
+        ethernet.get_destination(),
+        header.get_target_proto_addr(),
+        header.get_operation());
+}
+
+fn handle_ipv4_packet(interface_name: &str, ethernet: &EthernetPacket) {
+    println!("Handle IPv4 Packet");
+    let header = Ipv4Packet::new(ethernet.payload());
+    if header.is_none() { println!("Malformed IPv4 Packet!!!"); return; }
+    let header = header.unwrap();
+
+    handle_transport_protocol(interface_name,
+                              IpAddr::V4(header.get_source()),
+                              IpAddr::V4(header.get_destination()),
+                              header.get_next_level_protocol(),
+                              header.payload());
+}
+
+fn handle_tcp_packet(interface_name: &str, source: IpAddr, destination: IpAddr, packet: &[u8]) {
+    let tcp_packet = TcpPacket::new(packet);
+    if tcp_packet.is_none() { println!("Malformed TCP packet"); return; }
+    let tcp_packet = tcp_packet.unwrap();
+
+    println!("[{}]: TCP Packet: {}:{} > {}:{}; length: {}",
+             interface_name,
+             source,
+             tcp_packet.get_source(),
+             destination,
+             tcp_packet.get_destination(),
+             packet.len());
+}
+
+fn handle_transport_protocol(interface_name: &str, source: IpAddr, destination: IpAddr,
+                             protocol: IpNextHeaderProtocol, packet: &[u8]) {
+    match protocol {
+        IpNextHeaderProtocols::Tcp => {
+            println!("TCP IPv4");
+            handle_tcp_packet(interface_name, source, destination, packet)
+        }
+        _ => {
+            println!("Other");
+        }
+    }
 }
 
 #[cfg(test)]
