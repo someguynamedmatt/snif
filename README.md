@@ -3,6 +3,9 @@
 [![codecov](https://codecov.io/gh/someguynamedmatt/snif/branch/master/graph/badge.svg)](https://codecov.io/gh/someguynamedmatt/snif)
 
 > Quickly (and cleanly) check the configurations of your network devices
+
+The goal of `snif` is to be a one-stop-shop for simple interface needs, whether that be bringing your device up or down, blacklisting certain external calls, or simply checking your device IDs, `snif` should can handle the basic tasks. Plus, it's written in Rust so it has that new-car scent.
+
 ---
 ```bash
 $ snif wlp4s0
@@ -23,7 +26,7 @@ Mac Addr:
 ---
 ### Future Plans
 
-- Bring up/down interface
+- Bring interface up/down
 
 - Enable packet capture (in progress)
 
