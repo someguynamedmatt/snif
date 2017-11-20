@@ -84,7 +84,6 @@ fn main() {
 }
 
 /// Wrapper function to handle arbitrary data packets
-#[cfg(not(test))]
 fn handle_packet(interface_name: &str, ethernet: &EthernetPacket) {
     match ethernet.get_ethertype() {
         EtherTypes::Ipv4 => handle_ipv4_packet(interface_name, ethernet),
@@ -93,9 +92,8 @@ fn handle_packet(interface_name: &str, ethernet: &EthernetPacket) {
     }
 }
 
-#[cfg(not(test))]
 fn handle_arp_packet(interface_name: &str, ethernet: &EthernetPacket) {
-    println!("Handle ARP packet!");
+    debug!("Handle ARP packet!");
     let header = ArpPacket::new(ethernet.payload());
     if header.is_none() { println!("[{}]: Malformed ARP Packet", interface_name); return; }
     let header = header.unwrap();
@@ -109,9 +107,8 @@ fn handle_arp_packet(interface_name: &str, ethernet: &EthernetPacket) {
         header.get_operation());
 }
 
-#[cfg(not(test))]
 fn handle_ipv4_packet(interface_name: &str, ethernet: &EthernetPacket) {
-    println!("Handle IPv4 Packet");
+    debug!("Handle IPv4 Packet");
     let header = Ipv4Packet::new(ethernet.payload());
     if header.is_none() { println!("Malformed IPv4 Packet!!!"); return; }
     let header = header.unwrap();
@@ -123,7 +120,6 @@ fn handle_ipv4_packet(interface_name: &str, ethernet: &EthernetPacket) {
                               header.payload());
 }
 
-#[cfg(not(test))]
 fn handle_tcp_packet(interface_name: &str, source: IpAddr, destination: IpAddr, packet: &[u8]) {
     let tcp_packet = TcpPacket::new(packet);
     if tcp_packet.is_none() { println!("Malformed TCP packet"); return; }
@@ -138,7 +134,6 @@ fn handle_tcp_packet(interface_name: &str, source: IpAddr, destination: IpAddr, 
              packet.len());
 }
 
-#[cfg(not(test))]
 fn handle_transport_protocol(interface_name: &str, source: IpAddr, destination: IpAddr,
                              protocol: IpNextHeaderProtocol, packet: &[u8]) {
     match protocol {
