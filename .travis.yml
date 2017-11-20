@@ -28,8 +28,6 @@ script:
       cargo bench
 
 after_success:
-  - '[ $TRAVIS_OS_NAME = linux ] && travis-cargo --only nightly doc-upload'
-    # Coverage report
   - |
       if [[ "$TRAVIS_OS_NAME" == "linux" && "$TRAVIS_RUST_VERSION" == "stable" ]]; then
         wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
@@ -44,7 +42,7 @@ after_success:
         rm -rf kcov-master &&
         pwd &&
         ls &&
-        for file in target/debug/snif-*[^\.d]; do mkdir -p "target/cov/$(basename $file)"; kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
+        for file in target/debug/sniff-*[^\.d]; do mkdir -p "target/cov/$(basename $file)"; kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
         bash <(curl -s https://codecov.io/bash) &&
         echo "Uploaded code coverage"
       fi
