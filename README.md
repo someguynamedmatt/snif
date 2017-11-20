@@ -4,6 +4,7 @@
 ```bash
 $ snif wlp4s0
 ```
+[![Build Status](https://travis-ci.org/someguynamedmatt/snif.svg?branch=master)](https://travis-ci.org/someguynamedmatt/snif)
 
 Supplying your interface name (here shown as `wlp4s0`) will output information about your network device: IPs (IPv4 and IPv6), mac address, etc.
 
