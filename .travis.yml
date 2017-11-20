@@ -1,6 +1,10 @@
 sudo: false
 language: rust
 
+os:
+  - osx
+  - linux
+
 rust:
   - stable
   - nightly
