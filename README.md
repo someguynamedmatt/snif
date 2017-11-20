@@ -20,7 +20,16 @@ Mac Addr:
    e2:b7:a4:0b:a7:86
 ===================
 ```
+---
+### Future Plans
 
-Supplying your interface name (here shown as `wlp4s0`) will output information about your network device: IPs (IPv4 and IPv6), mac address, etc.
+- Bring up/down interface
 
-(WIP: feel free to help and learn Rust!)
+- Enable packet capture (in progress)
+
+- Allow for whitelisting/blacklisting IPs based on packet capture (in progress)
+
+  - Similar to '`LittleSnitch`' (MacOS) or '`OpenSnitch`' (Linux)
+
+
+> Feel free to help out!
