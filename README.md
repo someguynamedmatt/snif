@@ -4,7 +4,7 @@
 
 > Quickly (and cleanly) check the configurations of your network devices
 
-The goal of `snif` is to be a one-stop-shop for simple interface needs, whether that be bringing your device up or down, blacklisting certain external calls, or simply checking your device IDs, `snif` can handle the basic tasks. Plus, it's written in Rust so it has that new-car scent.
+The goal of `snif` is to be a one-stop-shop for simple interface needs, whether that be bringing your device up or down, blacklisting certain external calls, or simply checking your device IDs, `snif` can handle the basic tasks. Plus, it's written in [Rust](https://github.com/rust-lang/rust) so it has that new-car smell.
 
 ---
 ```bash
