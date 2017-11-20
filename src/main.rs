@@ -38,6 +38,8 @@ extern crate ipnetwork;
 extern crate pnet;
 
 use std::env;
+use std::io;
+use std::io::prelude::*;
 use ipnetwork::IpNetwork;
 use std::net::IpAddr;
 
