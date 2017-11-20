@@ -1,19 +1,6 @@
 sudo: true
 language: rust
 
-before_install:
-  - sudo apt-get update
-
-addons:
-  apt:
-    packages:
-      - libcurl4-openssl-dev
-      - libelf-dev
-      - libdw-dev
-      - cmake
-      - gcc
-      - binutils-dev
-      - kcov
 os:
   - linux
 
@@ -21,19 +8,13 @@ rust:
   - stable
   - nightly
 
-script:
-  - |
-      cargo build &&
-      cargo test
-
-after_success:
-  - |
-      if [[ "$TRAVIS_OS_NAME" == "linux" && "$TRAVIS_RUST_VERSION" == "stable" ]]; then
-        for file in target/debug/sniff-*[^\.d]; do mkdir -p "target/cov/$(basename $file)"; kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
-        bash <(curl -s https://codecov.io/bash) &&
-        echo "Uploaded code coverage"
-      fi
-
 env:
   global:
-    - TRAVIS_CARGO_NIGHTLY_FEATURE=""
+    - RUST_BACKTRACE=1
+    - RUSTFLAGS="-C link-dead-code"
+    - CARGO_MAKE_RUN_CODECOV="true"
+
+script:
+  - cargo install --debug cargo-make
+  - cargo make ci-flow
+
