@@ -49,6 +49,7 @@ use pnet::packet::tcp::TcpPacket;
 use pnet::packet::ethernet::{EtherTypes, EthernetPacket};
 use pnet::datalink::Channel::Ethernet;
 
+#[cfg(not(test))]
 fn main() {
     let interfaces = pnet_datalink::interfaces();
     let iface_arg = env::args().nth(1).expect("Network interface name not supplied!");
@@ -83,6 +84,7 @@ fn main() {
 }
 
 /// Wrapper function to handle arbitrary data packets
+#[cfg(not(test))]
 fn handle_packet(interface_name: &str, ethernet: &EthernetPacket) {
     match ethernet.get_ethertype() {
         EtherTypes::Ipv4 => handle_ipv4_packet(interface_name, ethernet),
@@ -91,6 +93,7 @@ fn handle_packet(interface_name: &str, ethernet: &EthernetPacket) {
     }
 }
 
+#[cfg(not(test))]
 fn handle_arp_packet(interface_name: &str, ethernet: &EthernetPacket) {
     println!("Handle ARP packet!");
     let header = ArpPacket::new(ethernet.payload());
@@ -106,6 +109,7 @@ fn handle_arp_packet(interface_name: &str, ethernet: &EthernetPacket) {
         header.get_operation());
 }
 
+#[cfg(not(test))]
 fn handle_ipv4_packet(interface_name: &str, ethernet: &EthernetPacket) {
     println!("Handle IPv4 Packet");
     let header = Ipv4Packet::new(ethernet.payload());
@@ -119,6 +123,7 @@ fn handle_ipv4_packet(interface_name: &str, ethernet: &EthernetPacket) {
                               header.payload());
 }
 
+#[cfg(not(test))]
 fn handle_tcp_packet(interface_name: &str, source: IpAddr, destination: IpAddr, packet: &[u8]) {
     let tcp_packet = TcpPacket::new(packet);
     if tcp_packet.is_none() { println!("Malformed TCP packet"); return; }
@@ -133,6 +138,7 @@ fn handle_tcp_packet(interface_name: &str, source: IpAddr, destination: IpAddr, 
              packet.len());
 }
 
+#[cfg(not(test))]
 fn handle_transport_protocol(interface_name: &str, source: IpAddr, destination: IpAddr,
                              protocol: IpNextHeaderProtocol, packet: &[u8]) {
     match protocol {
