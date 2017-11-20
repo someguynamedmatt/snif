@@ -1,5 +1,7 @@
 # SNIF: Simple Network InterFace
 [![Build Status](https://travis-ci.org/someguynamedmatt/snif.svg?branch=master)](https://travis-ci.org/someguynamedmatt/snif)
+[![codecov](https://codecov.io/gh/someguynamedmatt/snif/branch/master/graph/badge.svg)](https://codecov.io/gh/someguynamedmatt/snif)
+
 > Quickly (and cleanly) check the configurations of your network devices
 ---
 ```bash
