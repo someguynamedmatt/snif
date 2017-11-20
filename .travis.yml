@@ -19,7 +19,6 @@ os:
 rust:
   - stable
   - nightly
-  - 1.13.0
 
 script:
   - |

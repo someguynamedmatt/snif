@@ -145,3 +145,11 @@ fn handle_transport_protocol(interface_name: &str, source: IpAddr, destination: 
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn easy_test() {
+        assert!(1 == 1)
+    }
+}
