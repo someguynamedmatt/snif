@@ -21,17 +21,11 @@ rust:
   - nightly
   - 1.13.0
 
-before_script:
-  - |
-      pip install 'travis-cargo<0.2' --user &&
-      export PATH=$HOME/.local/bin:$HOME/Library/Python/2.7/bin:$PATH
-
 script:
   - |
-      travis-cargo build &&
-      travis-cargo test &&
-      travis-cargo bench &&
-      travis-cargo --only nightly doc
+      cargo build &&
+      cargo test &&
+      cargo bench
 
 after_success:
   - '[ $TRAVIS_OS_NAME = linux ] && travis-cargo --only nightly doc-upload'
