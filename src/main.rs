@@ -93,7 +93,7 @@ fn handle_packet(interface_name: &str, ethernet: &EthernetPacket) {
 }
 
 fn handle_arp_packet(interface_name: &str, ethernet: &EthernetPacket) {
-    debug!("Handle ARP packet!");
+    println!("Handle ARP packet!");
     let header = ArpPacket::new(ethernet.payload());
     if header.is_none() { println!("[{}]: Malformed ARP Packet", interface_name); return; }
     let header = header.unwrap();
@@ -108,7 +108,7 @@ fn handle_arp_packet(interface_name: &str, ethernet: &EthernetPacket) {
 }
 
 fn handle_ipv4_packet(interface_name: &str, ethernet: &EthernetPacket) {
-    debug!("Handle IPv4 Packet");
+    println!("Handle IPv4 Packet");
     let header = Ipv4Packet::new(ethernet.payload());
     if header.is_none() { println!("Malformed IPv4 Packet!!!"); return; }
     let header = header.unwrap();
