@@ -1,37 +1,8 @@
-// Enable clippy if our Cargo.toml file asked us to do so.
-#![cfg_attr(feature="clippy", feature(plugin))]
-#![cfg_attr(feature="clippy", plugin(clippy))]
-
-// Enable as many useful Rust and Clippy warnings as we can stand.  We'd
-// also enable `trivial_casts`, but we're waiting for
-// https://github.com/rust-lang/rust/issues/23416.
-#![warn(missing_copy_implementations,
-        missing_debug_implementations,
-        missing_docs,
-        trivial_numeric_casts,
-        unsafe_code,
-        unused_extern_crates,
-        unused_import_braces,
-        unused_qualifications)]
-#![cfg_attr(feature="clippy", warn(cast_possible_truncation))]
-#![cfg_attr(feature="clippy", warn(cast_possible_wrap))]
-#![cfg_attr(feature="clippy", warn(cast_precision_loss))]
-#![cfg_attr(feature="clippy", warn(cast_sign_loss))]
-#![cfg_attr(feature="clippy", warn(missing_docs_in_private_items))]
-#![cfg_attr(feature="clippy", warn(mut_mut))]
-// Disallow `println!`. Use `debug!` for debug output
-// (which is provided by the `log` crate).
-#![cfg_attr(feature="clippy", warn(print_stdout))]
-// This allows us to use `unwrap` on `Option` values (because doing makes
-// working with Regex matches much nicer) and when compiling in test mode
-// (because using it in tests is idiomatic).
-#![cfg_attr(all(not(test), feature="clippy"), warn(result_unwrap_used))]
-#![cfg_attr(feature="clippy", warn(unseparated_literal_suffix))]
-#![cfg_attr(feature="clippy", warn(wrong_pub_self_convention))]
-
 extern crate pnet;
+extern crate interfaces;
 
 use std::net::IpAddr;
+use self::interfaces::{Interface, Result};
 
 use self::pnet::packet::Packet;
 use self::pnet::packet::arp::ArpPacket;
@@ -41,7 +12,7 @@ use self::pnet::packet::tcp::TcpPacket;
 use self::pnet::packet::ethernet::{EtherTypes, EthernetPacket};
 
 /// Wrapper function to handle arbitrary data packets
-fn handle_packet(interface_name: &str, ethernet: &EthernetPacket) {
+pub fn handle_packet(interface_name: &str, ethernet: &EthernetPacket) {
     match ethernet.get_ethertype() {
         EtherTypes::Ipv4 => handle_ipv4_packet(interface_name, ethernet),
         EtherTypes::Arp => handle_arp_packet(interface_name, ethernet),
@@ -102,6 +73,40 @@ fn handle_transport_protocol(interface_name: &str, source: IpAddr, destination: 
             println!("Other");
         }
     }
+}
+
+pub fn change_interface_state(interface_name: &str, state_to: &str) {
+
+    let on = "on";
+    let off = "off";
+    let new_state = match &state_to {
+        &on => true,
+        &off => false,
+    };
+
+    let mut i = match Interface::get_by_name(interface_name) {
+        Ok(Some(i)) => i,
+        Ok(None) => {
+            println!("stuff");
+            return;
+        },
+        Err(e) => {
+            println!();
+            return;
+        },
+    };
+
+    /*
+    match i.set_up(new_state) {
+        Ok(_) => {
+            println!("[OK]: Device is now whatever");
+        },
+        Err(e) => {
+            // println!("[ERROR]: There was an error setting the device {}", new_state);
+            println!("[ERROR]: setting device state");
+        },
+    };
+    */
 }
 
 pub fn test_fn() {

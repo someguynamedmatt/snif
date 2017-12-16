@@ -3,12 +3,15 @@
 //! Quickly (and cleanly) check the configurations of your network devices
 
 extern crate pnet_datalink;
+extern crate pnet;
 extern crate ipnetwork;
 
 use std::env;
 use std::io;
 use std::io::prelude::*;
 use ipnetwork::IpNetwork;
+use pnet_datalink::Channel::Ethernet;
+use pnet::packet::ethernet::EthernetPacket;
 
 mod lib;
 use lib::*;
@@ -37,7 +40,10 @@ fn main() {
     io::stdout().write("\n".as_bytes());
     io::stdout().write("===================\n".as_bytes());
 
-    /*
+    let requested_device_state = env::args().nth(2).expect("Device state not defined!");
+
+    change_interface_state(&iface_arg, &requested_device_state);
+
     let (_, mut rx) = match pnet_datalink::channel(&interface, Default::default()) {
         Ok(Ethernet(tx, rx)) => (tx, rx),
         Ok(_) => panic!("Unhandled channel type!"),
@@ -46,7 +52,6 @@ fn main() {
 
     loop {
         let packet = EthernetPacket::new(rx.next().expect("ERROR WITH PACKET!!!"));
-        handle_packet("wlp4s0", &packet.unwrap());
+        lib::handle_packet("wlp4s0", &packet.unwrap());
     }
-    */
 }
