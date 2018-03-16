@@ -39,10 +39,10 @@ fn main() {
     if env::args().len() == 1 {
         io::stdout().write("\n======== Devices ========\n".as_bytes());
         for interface in pnet_datalink::interfaces() {
-            println!("- {}", interface.name);
+            println!("* {}", interface.name);
         }
         io::stdout().write("=========================\n".as_bytes());
-        io::stdout().write("For more detailed output try: `sniff -d <device name>`\n\n".as_bytes());
+        io::stdout().write("For more detailed output try: `snif -d <device name>`\n\n".as_bytes());
     }
     let interfaces = pnet_datalink::interfaces();
 

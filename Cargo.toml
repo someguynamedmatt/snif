@@ -1,7 +1,12 @@
 [package]
-name = "sniff"
+name = "snif"
 version = "0.1.0"
 authors = ["Matt <young.qubit@gmail.com>"]
+
+[[bin]]
+name = "snif"
+test = false
+doc = false
 
 [dependencies]
 interfaces = "0.0.3"
