@@ -29,36 +29,56 @@ fn main() {
                            .long("device")
                            .value_name("STRING")
                            .help("device name"))
+                      .arg(Arg::with_name("s")
+                           .short("s")
+                           .long("state")
+                           .value_name("STRING")
+                           .help("device state (on/off)\n\n"))
                       .get_matches();
 
-    // Calling .unwrap() is safe here because "INPUT" is required (if "INPUT" wasn't
-    // required we could have used an 'if let' to conditionally get the value)
-    //println!("Using version: {}", matches.value_of("v").unwrap());
-
-    // Vary the output based on how many times the user used the "verbose" flag
-    // (i.e. 'myprog -v -v -v' or 'myprog -vvv' vs 'myprog -v'
-    match matches.value_of("d").unwrap() {
-        "stuff" => println!("STUFFFFF"),
-        _ => println!("Don't be crazy"),
+    if env::args().len() == 1 {
+        io::stdout().write("\n======== Devices ========\n".as_bytes());
+        for interface in pnet_datalink::interfaces() {
+            println!("- {}", interface.name);
+        }
+        io::stdout().write("=========================\n".as_bytes());
+        io::stdout().write("For more detailed output try: `sniff -d <device name>`\n\n".as_bytes());
     }
-
-    /*
     let interfaces = pnet_datalink::interfaces();
-    let iface_arg = env::args().nth(1).expect("Network interface name not supplied!");
 
-    let interface_match = |iface: &pnet_datalink::NetworkInterface| iface.name == iface_arg;
-    let interface = interfaces.into_iter().find(interface_match).unwrap();
-    // You can handle information about subcommands by requesting their matches by name
-    // (as below), requesting just the name used, or both at the same time
-    if let Some(matches) = matches.subcommand_matches("test") {
-        if matches.is_present("debug") {
-            println!("Printing debug info...");
-        } else {
-            println!("Printing normally...");
+    if let Some(device) = matches.value_of("d") {
+        let interface_match = |iface: &pnet_datalink::NetworkInterface| iface.name == device;
+        let interface = interfaces.into_iter().find(interface_match).unwrap();
+
+        io::stdout().write("\n=========================\n".as_bytes());
+        io::stdout().write("IP:\n".as_bytes());
+        for ip in &interface.ips {
+            match *ip {
+                IpNetwork::V4(a) => println!("   IPv4: {}", a),
+                IpNetwork::V6(a) => println!("   IPv6: {}", a),
+            }
+        }
+
+        io::stdout().write("-------------------------\n".as_bytes());
+        io::stdout().write("Mac Addr:\n".as_bytes());
+        let mac_address = interface.mac.expect("???");
+        io::stdout().write(mac_address.to_string().as_bytes());
+        io::stdout().write("\n".as_bytes());
+        io::stdout().write("=========================\n\n".as_bytes());
+
+        if let Some(device_state) = matches.value_of("s") {
+            change_interface_state(&device, &device_state);
         }
     }
 
+    /*
+    let iface_arg = env::args().nth(1).expect("Network interface name not supplied!");
 
+    let interface_match = |iface: &pnet_datalink::NetworkInterface| iface.name == device;
+    let interface = interfaces.into_iter().find(interface_match).unwrap();
+    */
+
+    /*
     io::stdout().write("===================\n".as_bytes());
     io::stdout().write("IP:\n".as_bytes());
     for ip in &interface.ips {

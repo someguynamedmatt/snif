@@ -4,6 +4,8 @@ extern crate interfaces;
 use std::net::IpAddr;
 use self::interfaces::{Interface, Result};
 
+use std::io;
+use std::io::prelude::*;
 use self::pnet::packet::Packet;
 use self::pnet::packet::arp::ArpPacket;
 use self::pnet::packet::ip::{IpNextHeaderProtocol, IpNextHeaderProtocols};
@@ -76,13 +78,12 @@ fn handle_transport_protocol(interface_name: &str, source: IpAddr, destination: 
 }
 
 pub fn change_interface_state(interface_name: &str, state_to: &str) {
+    println!("STATE_TO {}", &state_to);
 
-    let on = "on";
-    let off = "off";
-    let new_state = match &state_to {
-        &on => true,
-        &off => false,
-    };
+    let mut new_state: bool = true;
+    if state_to == "off" {
+        new_state = false;
+    }
 
     let mut i = match Interface::get_by_name(interface_name) {
         Ok(Some(i)) => i,
@@ -96,17 +97,19 @@ pub fn change_interface_state(interface_name: &str, state_to: &str) {
         },
     };
 
-    /*
     match i.set_up(new_state) {
         Ok(_) => {
-            println!("[OK]: Device is now whatever");
+            if new_state == true {
+                io::stdout().write("[OK]: Device is now on\n".as_bytes());
+            }
+            if new_state == false {
+                io::stdout().write("[OK]: Device is now off\n".as_bytes());
+            }
         },
         Err(e) => {
-            // println!("[ERROR]: There was an error setting the device {}", new_state);
-            println!("[ERROR]: setting device state");
+            println!("[ERROR]: There was an error setting the device {}", e);
         },
     };
-    */
 }
 
 pub fn test_fn() {
