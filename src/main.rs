@@ -12,8 +12,6 @@ use std::io;
 use std::io::prelude::*;
 use clap::{Arg, App, SubCommand};
 use ipnetwork::IpNetwork;
-use pnet_datalink::Channel::Ethernet;
-use pnet::packet::ethernet::EthernetPacket;
 
 mod lib;
 use lib::*;
@@ -22,8 +20,8 @@ use lib::*;
 fn main() {
     let matches = App::new("SNIf")
                       .version("1.0")
-                      .author("Matt <young.qubit@gmail.com>")
-                      .about("Simple Network Interface tool")
+                      .author("Matt <dev@mttyng.com")
+                      .about("Simple Network Interface (tool)")
                       .arg(Arg::with_name("d")
                            .short("d")
                            .long("device")
@@ -61,7 +59,7 @@ fn main() {
 
         io::stdout().write("-------------------------\n".as_bytes());
         io::stdout().write("Mac Addr:\n".as_bytes());
-        let mac_address = interface.mac.expect("???");
+        let mac_address = interface.mac.expect("Something went wrong.");
         io::stdout().write(mac_address.to_string().as_bytes());
         io::stdout().write("\n".as_bytes());
         io::stdout().write("=========================\n\n".as_bytes());
@@ -70,44 +68,4 @@ fn main() {
             change_interface_state(&device, &device_state);
         }
     }
-
-    /*
-    let iface_arg = env::args().nth(1).expect("Network interface name not supplied!");
-
-    let interface_match = |iface: &pnet_datalink::NetworkInterface| iface.name == device;
-    let interface = interfaces.into_iter().find(interface_match).unwrap();
-    */
-
-    /*
-    io::stdout().write("===================\n".as_bytes());
-    io::stdout().write("IP:\n".as_bytes());
-    for ip in &interface.ips {
-        match *ip {
-            IpNetwork::V4(a) => println!("   IPv4: {}", a),
-            IpNetwork::V6(a) => println!("   IPv6: {}", a),
-        }
-    }
-
-    io::stdout().write("-------------------\n".as_bytes());
-    io::stdout().write("Mac Addr:\n".as_bytes());
-    let mac_address = interface.mac.expect("???");
-    io::stdout().write(mac_address.to_string().as_bytes());
-    io::stdout().write("\n".as_bytes());
-    io::stdout().write("===================\n".as_bytes());
-
-    let requested_device_state = env::args().nth(2).expect("Device state not defined!");
-
-    change_interface_state(&iface_arg, &requested_device_state);
-
-    let (_, mut rx) = match pnet_datalink::channel(&interface, Default::default()) {
-        Ok(Ethernet(tx, rx)) => (tx, rx),
-        Ok(_) => panic!("Unhandled channel type!"),
-        Err(e) => panic!("An error occurred when creating the datalink (maybe run as sudo):\n\n {}", e)
-    };
-
-    loop {
-        let packet = EthernetPacket::new(rx.next().expect("ERROR WITH PACKET!!!"));
-        lib::handle_packet("wlp4s0", &packet.unwrap());
-    }
-    */
 }
